@@ -18,3 +18,4 @@ vector<bitset<grid_size>> mino = {
 int main(){
     return 0;
 }
+//aaaaaaaaaaa
