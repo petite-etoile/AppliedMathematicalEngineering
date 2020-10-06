@@ -11,7 +11,7 @@ template<typename T>
 ostream& operator<< (ostream& os, vector<T> v){
     for(auto a:v){
         os << a;
-        os << " ";
+        os << ",";
     }
     os << endl;
     return os;
@@ -33,23 +33,17 @@ struct Mino{
     bitset<grid_size> bits;
     vector<bitset<grid_size>> bits_pattern;
     Mino(vector<string> S){
-        height = S.size();
-        width = S[0].size();
-        bits.reset();
 
-        for(int i=0; i<height; i++){
-            assert(width == S[i].size());
-            for(int j=0; j<width; j++){
-                if(S[i][j]=='1') bits.set(i*WIDTH + j);
-            }
-        }
+        build(S);
+        debug(1)
 
         for(int i=0; i<8; i++){
             debug(bits)
+            debug(i)
             if(not exist_in(bits_pattern, bits))
                 bits_pattern.emplace_back(bits);
-            rotate();
-            if(i == 3) reverse();
+            if(i == 3) reverse(S);
+            else rotate(S);
         }
     }
 
@@ -60,7 +54,10 @@ private:
         height = S.size();
         width = S[0].size();
         bits.reset();
-
+        if(width > 40) {
+            for(auto s:S[0]) cout << s << ".";
+            exit(0);
+        }
         for(int i=0; i<height; i++){
             assert(width == S[i].size());
             for(int j=0; j<width; j++){
@@ -71,37 +68,31 @@ private:
 
 
     //この構造体が持つbitsetを書き換える(回転)
-    void rotate(){
-        bitset<grid_size> res;
-
+    void rotate(vector<string>& S){
+        vector<string> newS(width, string(height,'.'));
         /* 回転 */
-        int h,w;
-        for(int i=0; i<HEIGHT; i++){
-            for(int j=0; j<WIDTH; j++){
-                h = WIDTH - j - 1;
-                w = i;
-                if(bits[i*WIDTH + j]) res.set(h * HEIGHT + w);
+        for(int i=0; i<height; i++){
+            for(int j=0; j<width; j++){
+                newS[width-j-1][i] = S[i][j];
             }
         }
-        assert(bits.count() == res.count());
-        swap(width, height);
-        bits = res;
+
+        build(newS);
+        swap(S, newS);
     }
 
-    void reverse(){
-        bitset<grid_size> res;
+    void reverse(vector<string>& S){
+        vector<string> newS(width, string(height,'.'));
 
         /*　反転　*/
-        int h,w;
-        for(int i=0; i<HEIGHT; i++){
+        for(int i=0; i<height; i++){
             for(int j=0; j<width; j++){
-                h = i;
-                w = width - j - 1;
-                if(bits[i*width + j]) res.set(h * width + w);
+                newS[j][i] = S[i][j];
             }
         }
 
-        bits = res;
+        build(newS);
+        swap(S, newS);
     }
 
 
@@ -122,7 +113,7 @@ void set_grid(int h_, int w_){
 
 
 void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid_size> const& grid){
-    // debug(depth);
+    if(depth >= 10) debug(depth)
     if(depth == minos.size()){
         /*敷き詰め完了! grid == 1111...1111になってるはず*/
         cout << "敷き詰め完了" << endl;
@@ -201,7 +192,7 @@ void mino_init(){
     minos.emplace_back(W);
 
     vector<string> X = {
-        "100", "100", "111"
+        "010", "111", "010"
     };
     minos.emplace_back(X);
 
