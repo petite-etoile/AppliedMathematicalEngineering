@@ -118,7 +118,6 @@ private:
 
 
 vector<Mino> minos;
-// vector<pair<int,int>> positions; //現在そのピースがgridの(上から何番目、左から何番目)か
 vector<bitset<grid_size>> positions; //現在そのピースが位置してる場所を示すbitset
 
 //gridの縦横のサイズを設定
@@ -131,7 +130,7 @@ void set_grid(int h_, int w_){
 
 char hex_chr(int x){
     if(x < 10) return '0' + x;
-    else return 'a' + x;
+    else return 'A' + (x-10);
 }
 
 //gridにハメられてるピースの状況を描画
@@ -156,29 +155,20 @@ void screen_grid(int const& depth, vector<int> const& indices){
     cout << endl;
 }
 
-void rec(int depth, int& cnt, int now_h, int now_w, vector<int> const& indices, bitset<grid_size> const& grid, bitset<grid_size> mask){
-    if(depth >= 10) debug(depth)
-    if(depth >= 5) screen_grid(depth, indices);
-    screen_grid(depth, indices);
+void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid_size> const& grid, bitset<grid_size> mask){
 
     if(depth == minos.size()){
         /*敷き詰め完了! grid == 1111...1111になってるはず*/
         cout << "敷き詰め完了" << endl;
-        cout << grid << endl << endl;
+        screen_grid(depth, indices);
+        assert(grid == mask);
+        cnt++;
         return;
     }
     int idx = indices[depth];
 
-    while(true){
-        if( (grid & mask) == mask ){
-            now_w++;
-            if(now_w >= WIDTH){
-                now_w = 0;
-                now_h++;
-            }
-            mask<<=1;
-            mask.set(0);
-        }else break;
+    while((grid & (mask >> ((HEIGHT - (now_h + 1)) * WIDTH))) ==  (mask >> ((HEIGHT - (now_h + 1)) * WIDTH))){
+        now_h++;
     }
 
     Mino mino = minos[idx];
@@ -186,19 +176,25 @@ void rec(int depth, int& cnt, int now_h, int now_w, vector<int> const& indices, 
         bitset<grid_size> bits = mino.bits_pattern[i];
         int mino_width = mino.width[i];
         int mino_height = mino.height[i];
-        bits <<= (WIDTH * now_h + now_w);
+        bits <<= (WIDTH * now_h);
+
+        if(now_h + mino_height > HEIGHT) continue; /*はみだす*/
+
         // debug(make_pair(now_h, now_w));
         // debug(make_pair(mino_height, mino_width));
         // debug(now_w + mino_width)
         // debug(WIDTH)
-        if((grid & bits).any()) continue; //重なる
-        if(now_h + mino_height > HEIGHT) continue; /*はみだす*/
-        if(now_w + mino_width  > WIDTH) break; /*はみ出す*/
 
-        bitset<grid_size> new_grid = grid | bits;
-        positions[idx] = bits;
+        for(int now_w=0; now_w<WIDTH; now_w++){
+            if((grid & (bits << now_w)).any()) continue; //重なる
+            if(now_w + mino_width  > WIDTH) break; /*はみ出す*/
 
-        rec(depth + 1, cnt, now_h, now_w, indices, new_grid, mask);
+            bitset<grid_size> new_grid = grid | (bits<<now_w);
+            positions[idx] = (bits<<now_w);
+
+            rec(depth + 1, cnt, now_h, indices, new_grid, mask);
+            break;
+        }
     }
 
     return;
@@ -272,26 +268,24 @@ int main(){
     set_grid(6,10);
 
     bitset<grid_size> mask;
-    mask.set(0);
+    mask.set();
+
+
     mino_init();
     positions.assign(minos.size(), 0);
-
-    for(auto& mino:minos){
-        debug(mino.bits_pattern.size())
-    }
 
     bitset<grid_size> grid;
 
     int cnt = 0;
-    // vector<int> indices(minos.size());
-    // for(int i=0; i<minos.size(); i++) indices[i] = i;
+    vector<int> indices(minos.size());
+    for(int i=0; i<minos.size(); i++) indices[i] = i;
 
-    // do{
-    //     rec(0,cnt,0,0,indices,grid,mask);
-    // }while(next_permutation(indices.begin(), indices.end()));
+    do{
+        rec(0,cnt,0,indices,grid,mask);
+    }while(next_permutation(indices.begin(), indices.end()));
 
-    vector<int> indices = {7,6,2,11,3,10,0,9,8,4,5,1};
-    rec(0, cnt, 0, 0, indices, grid, mask);
+    cout << cnt << "通りありました" << endl;
+
     return 0;
 }
 //aaaaaaaaaaa
