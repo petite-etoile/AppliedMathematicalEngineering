@@ -167,10 +167,9 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
 
     if(depth == minos.size()){
         /*敷き詰め完了! grid == 1111...1111になってるはず*/
-        cout << "敷き詰め完了" << endl;
+        cout << ++cnt << "通り目の敷き詰め" << endl;
         screen_grid(depth, indices);
         assert(grid == mask);
-        cnt++;
         return;
     }
     int idx = indices[depth];
@@ -194,6 +193,9 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
 
             bitset<grid_size> new_grid = grid | (bits<<now_w);
             positions[idx] = (bits<<now_w);
+
+            if((new_grid & (mask >> (grid_size - (now_h * WIDTH + now_w)))) != (mask >> (grid_size - (now_h * WIDTH + now_w)))) break;
+
 
             rec(depth + 1, cnt, now_h, indices, new_grid, mask);
             break;
@@ -282,6 +284,8 @@ int main(){
     int cnt = 0;
     vector<int> indices(minos.size());
     for(int i=0; i<minos.size(); i++) indices[i] = i;
+
+    // vector<int> indices = {0,1,3,5,4,8,7,9,11,6,10,2};
 
     do{
         rec(0,cnt,0,indices,grid,mask);
