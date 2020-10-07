@@ -128,6 +128,7 @@ void set_grid(int h_, int w_){
     assert(HEIGHT*WIDTH == grid_size);
 }
 
+//0~12 -> 
 char hex_chr(int x){
     if(x < 10) return '0' + x;
     else return 'A' + (x-10);
@@ -150,8 +151,15 @@ void screen_grid(int const& depth, vector<int> const& indices){
         }
     }
 
-    cout << "盤面の様子" << endl;
-    for(auto row:res) cout << row << endl;
+    cout << "盤面の様子" << "\n";
+    for(auto row:res){
+        for(auto chr:row){
+            if(chr<'8') cout << "\033[4" << chr-'0' << "m" << chr << "\033[m";
+            else if(chr<='9') cout << "\033[3" << chr-'7' << "m" << chr << "\033[m";
+            else  cout << "\033[3" << chr-'A'+3 << "m" << chr << "\033[m";
+        }
+        cout << "\n";
+    }
     cout << endl;
 }
 
@@ -179,11 +187,6 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
         bits <<= (WIDTH * now_h);
 
         if(now_h + mino_height > HEIGHT) continue; /*はみだす*/
-
-        // debug(make_pair(now_h, now_w));
-        // debug(make_pair(mino_height, mino_width));
-        // debug(now_w + mino_width)
-        // debug(WIDTH)
 
         for(int now_w=0; now_w<WIDTH; now_w++){
             if((grid & (bits << now_w)).any()) continue; //重なる
@@ -288,4 +291,3 @@ int main(){
 
     return 0;
 }
-//aaaaaaaaaaa
