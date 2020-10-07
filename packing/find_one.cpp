@@ -166,14 +166,16 @@ void screen_grid(int const& depth, vector<int> const& indices){
 void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid_size> const& grid, bitset<grid_size> mask){
 
     if(depth == minos.size()){
-        /*敷き詰め完了! grid == 1111...1111になってるはず*/
+        assert(grid == mask); /*敷き詰め完了! grid == 1111...1111になってるはず*/
+
         cout << ++cnt << "通り目の敷き詰め" << endl;
         screen_grid(depth, indices);
-        assert(grid == mask);
         return;
     }
+
     int idx = indices[depth];
 
+    //すでに○行まで埋まってるなら、見る行を一個下に下げる
     while((grid & (mask >> ((HEIGHT - (now_h + 1)) * WIDTH))) ==  (mask >> ((HEIGHT - (now_h + 1)) * WIDTH))){
         now_h++;
     }
@@ -181,8 +183,7 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
     Mino mino = minos[idx];
     for(int i=0; i<mino.bits_pattern.size(); i++){
         bitset<grid_size> bits = mino.bits_pattern[i];
-        int mino_width = mino.width[i];
-        int mino_height = mino.height[i];
+        int mino_width = mino.width[i], mino_height = mino.height[i]; 
         bits <<= (WIDTH * now_h);
 
         if(now_h + mino_height > HEIGHT) continue; /*はみだす*/
@@ -194,11 +195,10 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
             bitset<grid_size> new_grid = grid | (bits<<now_w);
             positions[idx] = (bits<<now_w);
 
-            if((new_grid & (mask >> (grid_size - (now_h * WIDTH + now_w)))) != (mask >> (grid_size - (now_h * WIDTH + now_w)))) break;
-
+            if((new_grid & (mask >> (grid_size - (now_h * WIDTH + now_w)))) != (mask >> (grid_size - (now_h * WIDTH + now_w)))) break; //now_h行のnow_w列より左に空きがまだあるなら重複数えあげの可能性があるので切る
 
             rec(depth + 1, cnt, now_h, indices, new_grid, mask);
-            break;
+            break; 
         }
     }
 
@@ -206,6 +206,7 @@ void rec(int depth, int& cnt, int now_h, vector<int> const& indices, bitset<grid
 
 }
 
+//ミノをbitsetで表現する
 void mino_init(){
     vector<string> F = {
         "110", "011", "010"
@@ -276,8 +277,8 @@ int main(){
     mask.set();
 
 
-    mino_init();
-    positions.assign(minos.size(), 0);
+    mino_init(); //ミノをbitsetで表現する
+    positions.resize(minos.size());
 
     bitset<grid_size> grid;
 
@@ -285,8 +286,7 @@ int main(){
     vector<int> indices(minos.size());
     for(int i=0; i<minos.size(); i++) indices[i] = i;
 
-    // vector<int> indices = {0,1,3,5,4,8,7,9,11,6,10,2};
-
+    /*ある順列に対して,左から*/
     do{
         rec(0,cnt,0,indices,grid,mask);
     }while(next_permutation(indices.begin(), indices.end()));
