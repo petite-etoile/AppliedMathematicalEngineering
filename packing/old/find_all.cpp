@@ -271,7 +271,7 @@ void mino_init(){
 }
 
 int main(){
-    set_grid(6,10);
+    set_grid(3,20);
 
     bitset<grid_size> mask;
     mask.set();
